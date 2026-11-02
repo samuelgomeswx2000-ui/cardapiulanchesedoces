@@ -14,7 +14,12 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show'
 function saveCart(){localStorage.setItem('bz_cart',JSON.stringify(cart));renderCart()}
 function hideLoadingScreen(){document.querySelector('#loadingScreen')?.classList.add('loaded')}
 window.addEventListener('DOMContentLoaded',()=>{
- const screen=$('#loadingScreen'),audio=$('#introVoice'),start=$('#startIntro'),caption=$('#loaderCaption'),progress=$('#introProgress');
+ const screen=$('#loadingScreen'),audio=$('#introVoice'),start=$('#startIntro'),caption=$('#loaderCaption'),progress=$('#introProgress'),quick=$('#quickLoader');
+ if(localStorage.getItem('bz_intro_completed')==='1'){
+  screen?.remove(); quick?.classList.add('show');
+  setTimeout(()=>quick?.classList.remove('show'),650);
+  return;
+ }
  const captions=[
   [0,'BURGuer ZONE — Tudo começa com ingredientes escolhidos com carinho.'],
   [7000,'Pão macio. Alface fresca. Tomate e queijo na medida.'],
@@ -46,7 +51,7 @@ window.addEventListener('DOMContentLoaded',()=>{
    start.textContent='APRESENTAÇÃO EM ANDAMENTO';
    audio.addEventListener('timeupdate',syncIntro);
    syncIntro();
-   audio.addEventListener('ended',()=>{if(progress)progress.style.width='100%';screen?.classList.add('loaded');setTimeout(()=>screen?.remove(),900)},{once:true});
+   audio.addEventListener('ended',()=>{if(progress)progress.style.width='100%';localStorage.setItem('bz_intro_completed','1');screen?.classList.add('loaded');setTimeout(()=>screen?.remove(),900)},{once:true});
    audio.addEventListener('error',()=>{start.disabled=false;start.textContent='▶ TENTAR NOVAMENTE';toast('Não foi possível carregar o áudio.')},{once:true});
   }catch(e){start.disabled=false;start.textContent='▶ TOQUE PARA OUVIR';toast('Clique novamente para iniciar o áudio.');}
  });
