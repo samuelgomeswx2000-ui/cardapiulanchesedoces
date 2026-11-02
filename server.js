@@ -81,7 +81,7 @@ passport.deserializeUser((id, done) => { try { done(null, db.prepare('SELECT * F
 const googleCallbackURL = process.env.GOOGLE_CALLBACK_URL || '';
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && googleCallbackURL) {
  passport.use(new GoogleStrategy({ clientID: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET, callbackURL: googleCallbackURL }, (accessToken, refreshToken, profile, done) => {
-  try { const email = String(profile.emails?.[0]?.value || '').toLowerCase(); if (!email) return done(new Error('A conta Google não forneceu e-mail.'));
+  try { const email = String(profile.emails?.[0]?.value || '').trim().toLowerCase(); if (!email) return done(new Error('A conta Google não forneceu e-mail.'));
    let u = db.prepare('SELECT * FROM users WHERE email=?').get(email);
    const role = ownerEmail && email === ownerEmail ? 'owner' : (u?.role || 'customer');
    if (!u) { const info = db.prepare('INSERT INTO users(name,email,password_hash,google_id,role) VALUES(?,?,?,?,?)').run(profile.displayName || email.split('@')[0], email, '', profile.id, role); u = db.prepare('SELECT * FROM users WHERE id=?').get(info.lastInsertRowid); }
@@ -123,8 +123,15 @@ app.post('/api/register',async(req,res)=>{
 });
 app.post('/api/login',async(req,res)=>{
  const email=String(req.body.email||'').trim().toLowerCase(),password=String(req.body.password||'');
- const u=db.prepare('SELECT * FROM users WHERE email=?').get(email);
+ let u=db.prepare('SELECT * FROM users WHERE email=?').get(email);
  if(!u||!u.password_hash||!await bcrypt.compare(password,u.password_hash))return res.status(401).json({error:'E-mail ou senha incorretos. Se usa Google, entre pelo botão Google.'});
+ // Promove imediatamente o e-mail do proprietário antes de devolver a sessão.
+ // Antes, a rota de login devolvia o perfil antigo (customer), embora /api/session
+ // corrigisse o papel depois; isso fazia o painel negar o acesso logo após o login.
+ if(ownerEmail && email===ownerEmail && u.role!=='owner'){
+  db.prepare("UPDATE users SET role='owner' WHERE id=?").run(u.id);
+  u=db.prepare('SELECT * FROM users WHERE id=?').get(u.id);
+ }
  req.session.regenerate(err=>{if(err)return res.status(500).json({error:'Não foi possível iniciar a sessão.'});req.session.user={id:u.id};res.json({user:publicUser(u)});});
 });
 app.post('/api/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
