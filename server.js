@@ -72,7 +72,7 @@ app.use(express.urlencoded({extended:true}));
 app.use(session({
  secret: process.env.SESSION_SECRET || 'troque-esta-chave-antes-de-publicar-8f3a2d',
  resave:false, saveUninitialized:false,
- cookie:{ httpOnly:true, sameSite:'lax', secure:process.env.NODE_ENV==='production', maxAge:7*24*60*60*1000 }
+ cookie:{ httpOnly:true, sameSite:'lax', secure:process.env.NODE_ENV==='production', maxAge:30*24*60*60*1000 }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -111,7 +111,7 @@ function productRow(p) {
  const r=db.prepare('SELECT ROUND(AVG(stars),1) rating, COUNT(*) review_count FROM reviews WHERE product_id=?').get(p.id);
  return {...p,available:!!p.available,rating:r.rating||0,review_count:r.review_count};
 }
-app.get('/auth/google',(req,res,next)=>{ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !googleCallbackURL) return res.status(503).send('Login Google ainda não configurado. Configure GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_CALLBACK_URL no Render.'); passport.authenticate('google',{scope:['profile','email'], prompt:'select_account'})(req,res,next); });
+app.get('/auth/google',(req,res,next)=>{ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !googleCallbackURL) return res.status(503).send('Login Google ainda não configurado. Configure GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_CALLBACK_URL no Render.'); passport.authenticate('google',{scope:['profile','email']})(req,res,next); });
 app.get('/auth/google/callback',(req,res,next)=>passport.authenticate('google',{failureRedirect:'/?google=error'},(err,u)=>{ if(err || !u) return res.redirect('/?google=error'); req.session.regenerate(sessionErr=>{ if(sessionErr) return res.redirect('/?google=error'); req.session.user={id:u.id}; res.redirect(u.role==='owner'||u.role==='admin'?'/admin':'/?login=success'); }); })(req,res,next));
 app.get('/api/session',(req,res)=>res.json({user:publicUser(currentUser(req))}));
 app.post('/api/register',async(req,res)=>{
