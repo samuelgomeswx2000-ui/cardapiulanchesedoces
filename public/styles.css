@@ -106,3 +106,10 @@ input,textarea,select{background:#100b10;color:#fff;border-color:#493345}
 .intro-caption{display:block!important;min-height:76px;max-width:520px;padding:15px 20px;margin-top:24px;border-left:3px solid #f078a8;background:linear-gradient(90deg,#e95f991f,transparent);color:#fff!important;font-size:clamp(15px,1.8vw,20px)!important;font-weight:700;letter-spacing:.2px;line-height:1.55!important;text-shadow:0 2px 14px #000;opacity:1}
 .intro-caption.caption-show{animation:captionIn .55s both}
 @media(max-width:720px){.intro-main{grid-template-columns:1fr;gap:12px}.intro-visual-stage{min-height:270px}.intro-burger>img{max-height:38vh}.intro-dessert img{height:30vh;width:min(65%,230px)}.intro-copy{text-align:center}.intro-caption{margin:12px auto 0;text-align:center;border-left:0;border-top:2px solid #f078a8}}
+
+/* Carregamento discreto nas próximas visitas */
+.quick-loader{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;gap:7px;background:#080608;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease}
+.quick-loader.show{opacity:1;visibility:visible}
+.quick-loader span{width:7px;height:7px;border-radius:50%;background:#ff4fa3;animation:quickDot .55s ease-in-out infinite alternate;box-shadow:0 0 12px #ff4fa388}
+.quick-loader span:nth-child(2){animation-delay:.12s}.quick-loader span:nth-child(3){animation-delay:.24s}
+@keyframes quickDot{from{opacity:.3;transform:translateY(3px) scale(.8)}to{opacity:1;transform:translateY(-3px) scale(1.15)}}
