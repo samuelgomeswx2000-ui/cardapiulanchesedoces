@@ -62,7 +62,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   }catch(e){start.disabled=false;start.textContent='▶ TOQUE PARA OUVIR';toast('Clique novamente para iniciar o áudio.');}
  });
 },{once:true});
-async function init(){try{user=(await api('/api/session')).user;await loadProducts();if(user)favorites=await api('/api/favorites')}catch(e){console.error(e)}renderCart();if(location.pathname==='/admin')renderAdmin();loadPublicStoreSettings();if(new URLSearchParams(location.search).get('google')==='error')toast('Não foi possível entrar com Google. Confira a configuração OAuth.');}
+async function init(){
+ const isAdminRoute=location.pathname==='/admin'||location.pathname==='/admin/';
+ try{user=(await api('/api/session')).user;}catch(e){console.error('Falha ao consultar sessão:',e);}
+ if(isAdminRoute){await renderAdmin();return;}
+ try{await loadProducts();if(user)favorites=await api('/api/favorites')}catch(e){console.error(e)}
+ renderCart();loadPublicStoreSettings();
+ if(new URLSearchParams(location.search).get('google')==='error')toast('Não foi possível entrar com Google. Confira a configuração OAuth.');
+}
 async function loadProducts(){products=await api('/api/products'+(search||category?'?'+new URLSearchParams({...(search?{q:search}:{}),...(category?{category}:{})}):''));renderCategories();renderProducts()}
 async function renderCategories(){const cats=await api('/api/categories');$('#categories').innerHTML=`<button class="category ${!category?'active':''}" data-category="">Todos os produtos</button>`+cats.map(c=>`<button class="category ${category===c?'active':''}" data-category="${esc(c)}">${esc(c)}</button>`).join('');$('#categories').querySelectorAll('button').forEach(b=>b.onclick=()=>{category=b.dataset.category;loadProducts()})}
 function renderProducts(){const grid=$('#productGrid');if(!products.length){grid.innerHTML='<div class="empty-state">Nosso cardápio está sendo preparado. Em breve teremos novidades por aqui!</div>';$('#resultCount').textContent='';return}
